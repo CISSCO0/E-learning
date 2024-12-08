@@ -15,4 +15,4 @@ export class Questions extends Document {
  
 }
 
-export const QuestionShema = SchemaFactory.createForClass(Questions);
+export const QuestionSchema = SchemaFactory.createForClass(Questions);
