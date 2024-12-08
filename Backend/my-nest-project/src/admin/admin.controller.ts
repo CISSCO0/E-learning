@@ -1,34 +1,68 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { CreateAdminDto } from './dto/create-admin.dto';
-import { UpdateAdminDto } from './dto/update-admin.dto';
+import { createAdminDTo } from './dto/createAdmin.dto';
+import { AuthGuard } from 'src/auth/guards/authentication.guard';
+import { AuthorizationGuard } from 'src/auth/guards/authorization.guard';
 
-@Controller('admin')
-export class AdminController {
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Role } from '../auth/decorators/roles.decorator';
+
+  @UseGuards(AuthGuard, AuthorizationGuard)
+  @Controller('admins')
+  export class AdminController {
   constructor(private readonly adminService: AdminService) {}
-
+  
+// ====================================================================== 
+  @UseGuards(AuthGuard, AuthorizationGuard)
+  @Roles(Role.Admin)
   @Post()
-  create(@Body() createAdminDto: CreateAdminDto) {
-    return this.adminService.createAdmin(createAdminDto);
+  async createAdmin(@Body() dto: createAdminDTo) {
+      return this.adminService.createAdmin(dto);
   }
-
+// ====================================================================== 
+  @UseGuards(AuthGuard, AuthorizationGuard)
+  @Roles(Role.Admin)
   @Get()
-  findAll() {
-    return this.adminService.findAll();
+  async getAllAdmins() {
+      return this.adminService.getAllAdmins();
   }
-
+// ====================================================================== 
+  @UseGuards(AuthGuard, AuthorizationGuard)
+  @Roles(Role.Admin)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.adminService.findOne(id);
+  async getAdminById(@Param('id') id: string) {
+      return this.adminService.getAdminById(id);
   }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
-    return this.adminService.update(id, updateAdminDto);
+// ====================================================================== 
+  @UseGuards(AuthGuard, AuthorizationGuard)
+  @Roles(Role.Admin)
+  @Put(':id')
+  async updateAdmin(@Param('id') id: string, @Body() dto: createAdminDTo) {
+      return this.adminService.updateAdmin(id, dto);
   }
-
+// ====================================================================== 
+  @UseGuards(AuthGuard, AuthorizationGuard)
+  @Roles(Role.Admin)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.adminService.remove(id);
+  async deleteAdmin(@Param('id') id: string) {
+      return this.adminService.deleteAdmin(id);
   }
+// ======================================================================
+  @UseGuards(AuthGuard, AuthorizationGuard)
+  @Roles(Role.Admin ,Role.Instructor,Role.Student)
+  @Get('/email/:email')
+  async findByEmail(@Param('email') email: string) {
+    return this.adminService.findByEmail(email);
+  }
+// ======================================================================
 }
+  

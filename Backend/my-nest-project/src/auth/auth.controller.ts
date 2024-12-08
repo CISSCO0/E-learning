@@ -5,26 +5,50 @@ import { RegisterAdminDto } from './dto/RegisterAdminDto';
 import { RegisterInstructorDto } from './dto/RegisterInstructorDto';
 import { RegisterStudentDto } from './dto/RegisterStudentDto';
 import { SignInDto } from './dto/SignInDto';
+import { Response } from 'express'; // Make sure you import this
+import { JwtService } from '@nestjs/jwt';  // Import the JwtService
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService,
+    private readonly jwtService: JwtService
+  ) {}
 
   @Post('login')
-  async signIn(@Body() signInDto: SignInDto, @Res({ passthrough: true }) res) {
+  async signIn(@Body() signInDto: SignInDto, @Res({ passthrough: true }) res: Response) {
     try {
       const result = await this.authService.signIn(signInDto.email, signInDto.password);
-
-      res.cookie('token', result.access_token, {
-        httpOnly: true, // Prevents client-side JavaScript access
-        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-        maxAge: 3600 * 1000, // Cookie expiration time in milliseconds
+  
+      // Role mapping logic
+      let role: string;
+      switch (result.payload.role) {
+        case '1':
+          role = 'admin';
+          break;
+        case '2':
+          role = 'instructor';
+          break;
+        case '3':
+          role = 'student';
+          break;
+        default:
+          role = 'guest'; // Or handle the case when role is not recognized
+      }
+  
+      // Now, include the mapped role in the payload for the JWT
+      const payload = { userid: result.payload.userid, role: role };
+  
+      // Set JWT token in a cookie
+      res.cookie('token', await this.jwtService.signAsync(payload), {
+        httpOnly: true,   // Ensures the cookie can't be accessed via JavaScript
+        secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
+        maxAge: 3600 * 1000, // 1 hour
       });
-
+  
       return {
         statusCode: HttpStatus.OK,
         message: 'Login successful',
-        user: result.payload,
+        user: result.payload, // Return the payload as part of the response
       };
     } catch (error) {
       throw new HttpException(
@@ -35,8 +59,8 @@ export class AuthController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  
   }
-
   @Post('register')
   async register(@Body() registerDto: RegisterRequestDto) {
     try {
@@ -45,15 +69,15 @@ export class AuthController {
 
       // Assign the specific role after user registration
       let result;
-
-      switch (registerDto.role_id) {
-        case 1: // Admin
+      
+      switch (registerDto.role) {
+        case '1': // Admin
           result = await this.authService.registerAdmin(user, registerDto as RegisterAdminDto);
           break;
-        case 2: // Instructor
+        case '2': // Instructor
           result = await this.authService.registerInstructor(user, registerDto as RegisterInstructorDto);
           break;
-        case 3: // Student
+        case '3': // Student
           result = await this.authService.registerStudent(user, registerDto as RegisterStudentDto);
           break;
         default:

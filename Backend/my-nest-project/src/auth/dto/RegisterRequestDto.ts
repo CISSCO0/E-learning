@@ -19,4 +19,12 @@ export class RegisterRequestDto {
   @IsOptional()
   @IsString()
   pfp?: string; 
+
+  @IsOptional() // Optional field for `hash_pass`, as it’s generated later
+  @IsString()
+  hash_pass?: string;
+
+  @IsNotEmpty()
+  @IsString()
+  role: string; // Add this if 'role' is required
 }

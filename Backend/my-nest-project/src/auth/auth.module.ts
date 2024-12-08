@@ -22,5 +22,6 @@ import { UserModule } from 'src/user/user.module';  // Assuming UserModule exist
   ],
   controllers: [AuthController],  // Handle the incoming HTTP requests
   providers: [AuthService],  // Service that contains the business logic
+  exports: [JwtModule]
 })
 export class AuthModule {}

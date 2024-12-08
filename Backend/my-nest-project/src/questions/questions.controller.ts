@@ -1,52 +1,45 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
-import { CreateQuestionDto } from './dto/create-question.dto';
-import { UpdateQuestionDto } from './dto/update-question.dto';
+import { CreateQuestionDto } from './dto/createQuestion.dto';
+import { UpdateQuestionDto } from './dto/updateQuestion.dto';
+import { AuthGuard } from 'src/auth/guards/authentication.guard';
+import { AuthorizationGuard } from 'src/auth/guards/authorization.guard';
 
+import { Roles, Role } from 'src/auth/decorators/roles.decorator';
+@UseGuards(AuthGuard, AuthorizationGuard)
 @Controller('questions')
 export class QuestionsController {
-  constructor(private readonly questionsService: QuestionsService) {}
+  constructor(private questionsService: QuestionsService) {}
 
-  @Post()
-  createQuestion(@Body() createQuestionDto: CreateQuestionDto) {
-    return this.questionsService.createQuestion(createQuestionDto);
-  }
-
-  @Get()
-  getQuestions() {
-    return this.questionsService.getQuestions();
-  }
-
+  // Get question by ID
   @Get(':id')
-  getQuestionById(@Param('id') id: string) {
-    return this.questionsService.getQuestionById(id);
+  @Roles(Role.Student,Role.Instructor)
+  async getQuestionById(@Param('id') id: string) {
+    return await this.questionsService.getQuestionById(id);
   }
 
-  @Put(':id')
-  updateQuestion(
+  // Create a new question
+  @Post()
+  @Roles(Role.Instructor)
+  async createQuestion(@Body() createQuestionDto: CreateQuestionDto) {
+    return await this.questionsService.createQuestion(createQuestionDto);
+  }
+
+  // Delete question by ID (and associated responses)
+  @Delete(':id')
+  @Roles(Role.Instructor)
+  async deleteQuestionById(@Param('id') id: string) {
+    await this.questionsService.deleteQuestionById(id);
+    return { message: 'Question and related responses deleted successfully' };
+  }
+
+  // Update a question by ID
+  @Patch(':id')
+  @Roles(Role.Instructor)
+  async updateQuestionById(
     @Param('id') id: string,
     @Body() updateQuestionDto: UpdateQuestionDto,
   ) {
-    return this.questionsService.updateQuestion(id, updateQuestionDto);
+    return await this.questionsService.updateQuestionById(id, updateQuestionDto);
   }
-
-  @Delete(':id')
-  deleteQuestion(@Param('id') id: string) {
-    return this.questionsService.deleteQuestion(id);
-  }
-
-  @Get('/quiz/:quizId')
-getQuestionsByQuiz(@Param('quizId') quizId: string) {
-  return this.questionsService.getQuestionsByQuiz(quizId);
-}
-
-@Get('/quiz/:quizId/level/:level')
-getQuestionsByLevel(
-  @Param('quizId') quizId: string,
-  @Param('level') level: string,
-) {
-  return this.questionsService.getQuestionsByLevel(quizId, level);
-}
-
-
 }

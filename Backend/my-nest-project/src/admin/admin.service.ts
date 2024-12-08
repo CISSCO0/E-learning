@@ -1,56 +1,62 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Admin } from '../models/admin.schema'; // Import Admin schema
-
-import { CreateAdminDto } from './dto/create-admin.dto';
-import { UpdateAdminDto } from './dto/update-admin.dto';
+import { Admin } from './models/admin.shema';
+import { createAdminDTo } from './dto/createAdmin.dto';
 
 @Injectable()
 export class AdminService {
   constructor(
-    @InjectModel(Admin.name) private adminModel: Model<Admin>, // Removed AdminDocument
+    @InjectModel(Admin.name)
+    private readonly adminModel: Model<Admin>,
   ) {}
-
+// ====================================================================== 
   // Create a new admin
-  async createAdmin(createAdminDto: CreateAdminDto): Promise<Admin> {
-    const admin = new this.adminModel(createAdminDto);
-    return admin.save(); 
+  async createAdmin(dto: createAdminDTo): Promise<Admin> {
+    try {
+      // Attempt to create and save the new admin
+      const newAdmin = new this.adminModel(dto);
+      const savedAdmin = await newAdmin.save();
+      return savedAdmin; // Return the saved admin
+    } catch (error) {
+      // Handle any errors that occur during saving
+      console.error('Error while creating admin:', error);
+  
+      // If the error is related to duplicate admin (e.g., duplicate email or other unique constraint)
+      if (error.code === 11000) { // MongoDB duplicate key error code
+        throw new ConflictException('Admin with this email already exists');
+      }
+  
+      // Handle other server errors
+      throw new InternalServerErrorException('Failed to create admin');
+    }
   }
-
+// ====================================================================== 
   // Get all admins
-  async findAll(): Promise<Admin[]> {
+  async getAllAdmins(): Promise<Admin[]> {
     return this.adminModel.find().exec();
   }
-
-  // Get a single admin by ID
-  async findOne(id: string): Promise<Admin> {
-    const admin = await this.adminModel.findById(id).exec();
-    if (!admin) {
-      throw new NotFoundException(`Admin with id ${id} not found`);
-    }
-    return admin;
+// ====================================================================== 
+  // Get an admin by ID
+  async getAdminById(id: string): Promise<Admin> {
+    return this.adminModel.findById(id).exec();
   }
-
-  // Update an existing admin
-  async update(id: string, updateAdminDto: UpdateAdminDto): Promise<Admin> {
-    const updatedAdmin = await this.adminModel
-      .findByIdAndUpdate(id, updateAdminDto, { new: true }) 
+// ====================================================================== 
+  // Update an admin by ID
+  async updateAdmin(id: string, dto: createAdminDTo): Promise<Admin> {
+    return this.adminModel
+      .findByIdAndUpdate(id, dto, { new: true })
       .exec();
-    
-    if (!updatedAdmin) {
-      throw new NotFoundException(`Admin with id ${id} not found`);
-    }
-
-    return updatedAdmin;
   }
-
+// ====================================================================== 
   // Delete an admin by ID
-  async remove(id: string): Promise<Admin> {
-    const deletedAdmin = await this.adminModel.findByIdAndDelete(id).exec();
-    if (!deletedAdmin) {
-      throw new NotFoundException(`Admin with id ${id} not found`);
-    }
-    return deletedAdmin;
+  async deleteAdmin(id: string): Promise<Admin> {
+    return this.adminModel.findByIdAndDelete(id).exec();
   }
+// ====================================================================== 
+  // Get an admin by Email
+  async findByEmail(email: string): Promise<Admin | null> {
+    return this.adminModel.findOne({ email }).exec();
+  }
+// ====================================================================== 
 }
