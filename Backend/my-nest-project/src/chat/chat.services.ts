@@ -19,6 +19,8 @@ export class ChatService {
     return this.chatModel.create(data);
   }
 
+
+  
   async updateChat(id: string, updateData: any) {
     return this.chatModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
   }
@@ -28,4 +30,9 @@ export class ChatService {
     if (!chat) throw new Error('Chat not found');
     return this.chatModel.findByIdAndDelete(id).exec();
   }
+
+
+  async getChatsForUser(userId: string): Promise<Chat[]> {
+    return this.chatModel.find({ users: userId }).exec(); 
+  } 
 }

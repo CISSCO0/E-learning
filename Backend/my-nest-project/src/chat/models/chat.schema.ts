@@ -8,7 +8,7 @@ export class Chat {
   users: string[];
 
   @Prop({ type: [ChatMessageSchema], default: [] })
-  messages: ChatMessage[];
+  messages: string [];
 
   @Prop({ required: true })
   content: string;

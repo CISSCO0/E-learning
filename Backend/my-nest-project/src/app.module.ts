@@ -63,7 +63,7 @@ import { BackupModule } from './backup/backup.module';
     UserModule,
     ThreadModule,
     ThreadMessageModule,
-     ChatModule,
+    ChatModule,
     ChatMessageModule,
      ForumModule,
     LogsModule,

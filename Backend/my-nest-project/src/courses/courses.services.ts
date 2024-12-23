@@ -7,6 +7,7 @@ import { Modules } from '../modules/models/modules.schema';
 import { Model } from 'mongoose';
 import { CreateCourseDto } from './dto/create.course.dto';
 import { UpdateCourseDto } from './dto/update.course.dto';
+import { Chat } from 'src/chat/models/chat.schema';
 @Injectable()
 export class CoursesService {
     constructor(
@@ -126,6 +127,23 @@ async searchByKeywordsForStudents(keywords: string[]): Promise<Courses[]> {
           
             return courses;
 }
+
+
+async getCourseChats(courseId: string): Promise<Chat[]> {
+  const course = await this.courseModel.findById(courseId).exec();
+  if (!course) throw new NotFoundException('Course not found');
+  return course.chats;
+}
+
+async addChatToCourse(courseId: string, chatData: Chat): Promise<Chat[]> {
+  const course = await this.courseModel.findById(courseId).exec();
+  if (!course) throw new NotFoundException('Course not found');
+
+  course.chats.push(chatData);
+  await course.save();
+  return course.chats;
+}
+
           
 
 }

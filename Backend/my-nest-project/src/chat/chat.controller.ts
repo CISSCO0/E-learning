@@ -6,27 +6,36 @@ export class ChatController {
   constructor(private chatService: ChatService) {}
 
   @Get()
-  getAllChats() {
-    return this.chatService.getAllChats();
+ async  getAllChats() {
+    return await  this.chatService.getAllChats();
   }
 
+
   @Get(':id')
-  getChatById(@Param('id') id: string) {
-    return this.chatService.getChatById(id);
+
+  async getChatById(@Param('id') id: string) {
+    return await this.chatService.getChatById(id);
   }
 
   @Post()
-  createChat(@Body() data: any) {
-    return this.chatService.createChat(data);
+  async createChat(@Body() data: any) {
+    console.log("mannnnn")
+    return await this.chatService.createChat(data);
   }
 
-  @Put(':id')
-  updateChat(@Param('id') id: string, @Body() updateData: any) {
-    return this.chatService.updateChat(id, updateData);
+   @Put(':id')
+  async updateChat(@Param('id') id: string, @Body() updateData: any) {
+    return await this.chatService.updateChat(id, updateData);
   }
 
   @Delete(':id')
-  deleteChat(@Param('id') id: string) {
-    return this.chatService.deleteChat(id);
+ async deleteChat(@Param('id') id: string) {
+    return await this.chatService.deleteChat(id);
+  }
+
+  @Get('users/:userId')
+  async getChatsForUser(@Param('userId') userId: string) {
+    console.log("menna");
+    return await this.chatService.getChatsForUser(userId);
   }
 }

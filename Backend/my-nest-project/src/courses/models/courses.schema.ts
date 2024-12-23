@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { Chat, ChatSchema } from 'src/chat/models/chat.schema';
 
 @Schema()
 export class Courses extends Document {
@@ -34,6 +35,8 @@ export class Courses extends Document {
 
    @Prop({ type:[String], required: true })
   keywords: string[];
+  @Prop({ type: [ChatSchema], default: [] })
+  chats: Chat[];
 
 }
 

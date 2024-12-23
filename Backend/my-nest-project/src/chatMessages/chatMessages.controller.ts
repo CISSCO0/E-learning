@@ -11,9 +11,10 @@ export class ChatMessageController {
   }
 
   @Get(':id')
-  getChatMessageById(@Param('id') id: string) {
-    return this.chatMessageService.getChatMessageById(id);
+  async getChatMessageById(@Param('id') id: string) {
+    return await this.chatMessageService.getChatMessageById(id);
   }
+
 
   @Post()
   createChatMessage(@Body() data: any) {

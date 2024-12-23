@@ -9,6 +9,7 @@ import { Role, Roles } from '../auth/decorators/roles.decorator';
 import { Public} from '../auth/decorators/public.decorator';
 import { AuthorizationGuard } from '../auth/guards/authorization.gaurd';
 import { AuthGuard} from '../auth/guards/authentication.guard';
+import { Chat } from 'src/chat/models/chat.schema';
  @Controller('courses')
 // @UseGuards(AuthorizationGuard)
 // @UseGuards(AuthGuard)
@@ -118,4 +119,19 @@ export class CoursesController {
    async getCourseById(@Param('courseId') courseId: string): Promise<Courses> {
      return this.courseService.getCourseById(courseId);
    }
+
+
+
+  @Get(':courseId/chats')
+  async getCourseChats(@Param('courseId') courseId: string): Promise<Chat[]> {
+    return this.courseService.getCourseChats(courseId);
+  }
+
+  @Post(':courseId/chats')
+  async addChatToCourse(
+    @Param('courseId') courseId: string,
+    @Body() chatData: Chat,
+  ): Promise<Chat[]> {
+    return this.courseService.addChatToCourse(courseId, chatData);
+  }
 }
