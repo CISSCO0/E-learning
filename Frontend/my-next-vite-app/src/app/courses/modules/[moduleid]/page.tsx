@@ -129,6 +129,7 @@ export default function ModulePage({ params }: { params: Promise<{ moduleid: str
   const handleSetOutdated = async (resourceId: string, currentOutdatedStatus: boolean) => {
     try {
       await updateOutdatedFlag(resourceId, currentOutdatedStatus);
+      console.log('....',currentOutdatedStatus)
       setResourcesWithLinks((prevResources) =>
         prevResources.map((res) =>
           res._id === resourceId ? { ...res, outdated: !currentOutdatedStatus } : res
@@ -191,6 +192,7 @@ export default function ModulePage({ params }: { params: Promise<{ moduleid: str
                       className="outdated-button"
                     >
                       {res.outdated ? 'Undo Outdated' : 'Set Outdated'}
+                      {res.outdated}
                     </button>
                   </div>
                 </li>

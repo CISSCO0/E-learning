@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException,Res } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Progress } from './models/progress.schema';
@@ -9,6 +9,7 @@ import {CreateProgressDto} from './dto/create.dto'
 import { StudentModule } from 'src/student/student.module';
 import * as fs from 'fs';
 import * as path from 'path';
+import { response } from 'express';
 @Injectable()
 export class ProgressService {
   constructor(
@@ -243,5 +244,81 @@ export class ProgressService {
   async deleteReportFile(filePath: string) {
     fs.unlinkSync(filePath);
   }
-  
-}
+  async generateCourseCompletionReport(): Promise<string> {
+    try {
+      // Fetch the required data from the progress collection
+      const progressData = await this.progressModel.find({}, { course_id: 1, user_id: 1, completion_percentage: 1 });
+
+      if (!progressData || progressData.length === 0) {
+        throw new NotFoundException('No progress data found');
+      }
+
+      // Initialize containers for course completion data
+      const courseCompletionData: { [courseId: string]: { students: number; completed: number; details: string[] } } = {};
+
+      // Loop through the progress data and organize it by course
+      progressData.forEach((progress) => {
+        const courseId = progress.course_id.toString();
+        const userId = progress.user_id;
+        const completionRate = progress.completion_percentage;
+
+        // Initialize course data if not already present
+        if (!courseCompletionData[courseId]) {
+          courseCompletionData[courseId] = { students: 0, completed: 0, details: [] };
+        }
+
+        // Increment student count and completion count based on completion rate
+        courseCompletionData[courseId].students++;
+        if (completionRate === 100) {
+          courseCompletionData[courseId].completed++;
+        }
+
+        // Add the user details to the report (student ID, completion rate)
+        courseCompletionData[courseId].details.push(`${courseId}, ${userId}, ${completionRate}`);
+      });
+
+      // Prepare CSV content
+      const courseCompletionRows: string[] = [];
+      const courseSummaryRows: string[] = [];
+
+      // Prepare the details rows for each course
+      for (const [courseId, data] of Object.entries(courseCompletionData)) {
+        // Add course-specific details (student ID and completion rate)
+        courseCompletionRows.push(...data.details);
+
+        // Add a summary row with the course total information (students and completed)
+        courseSummaryRows.push(`${courseId}, ${data.students}, ${data.completed}`);
+      }
+
+      // Combine the headers and rows for the CSV file
+      const courseCompletionHeader = 'Course ID, Student ID, Completion Rate';
+      const courseSummaryHeader = 'Course ID, Total Students, Total Completed';
+
+      const csvString = [
+        courseCompletionHeader,
+        ...courseCompletionRows,
+        '',
+        courseSummaryHeader,
+        ...courseSummaryRows
+      ].join('\n');
+
+      // Ensure the reports directory exists
+      const reportDirectory = path.join(__dirname, '../reports');
+      if (!fs.existsSync(reportDirectory)) {
+        fs.mkdirSync(reportDirectory, { recursive: true });
+      }
+
+      // Define the file path where the report will be saved
+      const reportFilePath = path.join(reportDirectory, 'course_completion_report.csv');
+
+      // Write the CSV data to the file system
+      fs.writeFileSync(reportFilePath, csvString);
+
+      // Return the file path for download
+      return reportFilePath;
+
+    } catch (error) {
+      console.error('Error generating course completion report:', error);
+      throw new Error(`Failed to generate the report: ${error.message || error}`);
+    }
+  }}

@@ -51,6 +51,15 @@ export class ProgressController {
       res.status(404).json({ message: error.message });
     }
   }
+
+
+  @Get('course-completion/')
+  async generateCourseCompletionReport(@Res() response: Response) {
+    const filePath = await this.progressService.generateCourseCompletionReport();
+    response.download(filePath); // Sends the file as a download
+  }
+
+
    // GET by ID
    @Get(':id')
    @Public()

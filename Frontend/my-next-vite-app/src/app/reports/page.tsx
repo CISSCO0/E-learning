@@ -2,16 +2,27 @@
 
 import { useState } from 'react';
 import axios from 'axios';
+import './report.css'
 
 const ReportGeneration = () => {
-  const [isLoading, setIsLoading] = useState<{ progress: boolean; analytics: boolean; instructorRatings: boolean }>({
+  const [isLoading, setIsLoading] = useState<{ progress: boolean; analytics: boolean; instructorRatings: boolean; courseCompletion: boolean }>({
     progress: false,
     analytics: false,
     instructorRatings: false,
+    courseCompletion: false,  // New loading state for the course completion report
   });
 
   const [error, setError] = useState<string | null>(null);
   const [csvData, setCsvData] = useState<string[][] | null>(null); // Parsed CSV data
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10; // Number of rows per page
+
+  // Pagination logic
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const currentRows = csvData ? csvData.slice(indexOfFirstRow + 1, indexOfLastRow + 1) : [];
+  const totalPages = csvData ? Math.ceil((csvData.length - 1) / rowsPerPage) : 1;
+
 
   // Helper function to convert JSON response to CSV format
   const convertToCSVFormat = (data: any[]): string[][] => {
@@ -33,27 +44,26 @@ const ReportGeneration = () => {
         responseType: 'json', // Handle JSON response
       });
 
-      // Determine if the response is in CSV format or JSON
+      // Check if the response is a CSV file or JSON data
       if (response.headers['content-type']?.includes('text/csv')) {
-        // Handle CSV content directly
         const csvString = response.data;
         const csvRows = csvString.split('\n').map((row: any) => row.split(','));
         setCsvData(csvRows);
 
-        // Create a Blob for download
+        // Create a Blob for CSV download
         const fileURL = window.URL.createObjectURL(new Blob([csvString]));
         const link = document.createElement('a');
         link.href = fileURL;
         link.setAttribute('download', fileName);
         link.click();
       } else {
-        // Handle JSON response
-        const reportData = response.data; // Assuming the response is JSON
+        // Assuming the response is JSON
+        const reportData = response.data; // The JSON data from the backend
 
         const csvFormattedData = convertToCSVFormat(reportData); // Convert JSON to CSV-like rows
         setCsvData(csvFormattedData);
 
-        // Convert the CSV data back to a string for download
+        // Convert CSV data back to string for download
         const csvString = csvFormattedData.map((row) => row.join(',')).join('\n');
         const fileURL = window.URL.createObjectURL(new Blob([csvString]));
         const link = document.createElement('a');
@@ -74,95 +84,113 @@ const ReportGeneration = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen space-y-8">
-      <h2 className="text-2xl font-bold mb-4">Report Generation</h2>
+    <div className="report-container">
+    <h2 className="report-title">Report Generation</h2>
 
-      {/* Buttons for Generating Reports */}
-      <div className="space-y-4">
-        {/* Progress Report Button */}
-        <button
-          onClick={() =>
-            handleCsvDownload(
-              'http://localhost:5000/progress/quiz-results/',
-              'progress_report.csv',
-              'progress'
-            )
-          }
-          disabled={isLoading.progress}
-          className={`px-4 py-2 rounded text-white ${
-            isLoading.progress ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-          }`}
-        >
-          {isLoading.progress ? 'Generating Progress Report...' : 'Generate Progress Report'}
-        </button>
+    <div className="report-buttons">
+      <button
+        onClick={() =>
+          handleCsvDownload(
+            'http://localhost:5000/progress/quiz-results/',
+            'progress_report.csv',
+            'progress'
+          )
+        }
+        disabled={isLoading.progress}
+        className={`report-button ${isLoading.progress ? 'disabled' : 'blue'}`}
+      >
+        {isLoading.progress ? 'Generating Progress Report...' : 'Generate Progress Report'}
+      </button>
 
-        {/* Course Analytics Report Button */}
-        <button
-          onClick={() =>
-            handleCsvDownload(
-              'http://localhost:5000/courses/report/',
-              'course_analytics_report.csv',
-              'analytics'
-            )
-          }
-          disabled={isLoading.analytics}
-          className={`px-4 py-2 rounded text-white ${
-            isLoading.analytics ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
-          }`}
-        >
-          {isLoading.analytics ? 'Generating Course Analytics Report...' : 'Generate Course Analytics Report'}
-        </button>
-   
-        {/* Instructor Ratings Report Button */}
-        <button
-          onClick={() =>
-            handleCsvDownload(
-              'http://localhost:5000/instructors/report',  // Correct URL for instructor ratings
-              'instructor_ratings_report.csv',
-              'instructorRatings'
-            )
-          }
-          disabled={isLoading.instructorRatings}
-          className={`px-4 py-2 rounded text-white ${
-            isLoading.instructorRatings ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
-          }`}
-        >
-          {isLoading.instructorRatings ? 'Generating Instructor Ratings Report...' : 'Generate Instructor Ratings Report'}
-        </button>
-      </div>
+      <button
+        onClick={() =>
+          handleCsvDownload(
+            'http://localhost:5000/courses/report/',
+            'course_analytics_report.csv',
+            'analytics'
+          )
+        }
+        disabled={isLoading.analytics}
+        className={`report-button ${isLoading.analytics ? 'disabled' : 'green'}`}
+      >
+        {isLoading.analytics ? 'Generating Course Analytics Report...' : 'Generate Course Analytics Report'}
+      </button>
 
-      {/* Error Message */}
-      {error && <p className="text-red-600 mt-4">{error}</p>}
+      <button
+        onClick={() =>
+          handleCsvDownload(
+            'http://localhost:5000/instructors/report',
+            'instructor_ratings_report.csv',
+            'instructorRatings'
+          )
+        }
+        disabled={isLoading.instructorRatings}
+        className={`report-button ${isLoading.instructorRatings ? 'disabled' : 'purple'}`}
+      >
+        {isLoading.instructorRatings ? 'Generating Instructor Ratings Report...' : 'Generate Instructor Ratings Report'}
+      </button>
 
-      {/* Display CSV Data */}
-      {csvData && (
-        <div className="mt-8">
-          <h3 className="text-xl font-bold mb-2">Report Data:</h3>
-          <table className="border-collapse border border-gray-400">
-            <thead>
-              <tr>
-                {csvData[0].map((header, index) => (
-                  <th key={index} className="border border-gray-400 px-2 py-1">
-                    {header}
-                  </th>
+      <button
+        onClick={() =>
+          handleCsvDownload(
+            'http://localhost:5000/progress/course-completion',
+            'course_completion_report.csv',
+            'courseCompletion'
+          )
+        }
+        disabled={isLoading.courseCompletion}
+        className={`report-button ${isLoading.courseCompletion ? 'disabled' : 'teal'}`}
+      >
+        {isLoading.courseCompletion ? 'Generating Course Completion Report...' : 'Generate Course Completion Report'}
+      </button>
+    </div>
+
+    {error && <p className="error-message">{error}</p>}
+
+    {csvData && (
+      <div className="report-data">
+        <h3 className="data-title">Report Data:</h3>
+        <table className="data-table">
+          <thead>
+            <tr>
+              {csvData[0].map((header, index) => (
+                <th key={index}>{header}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {currentRows.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {row.map((cell, cellIndex) => (
+                  <td key={cellIndex}>{cell}</td>
                 ))}
               </tr>
-            </thead>
-            <tbody>
-              {csvData.slice(1).map((row, rowIndex) => (
-                <tr key={rowIndex}>
-                  {row.map((cell, cellIndex) => (
-                    <td key={cellIndex} className="border border-gray-400 px-2 py-1">
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="pagination">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="report-button blue"
+          >
+            Previous
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="report-button blue"
+          >
+            Next
+          </button>
         </div>
-      )}
-    </div>
+      </div>
+    )}
+  </div>
   );
 };
 

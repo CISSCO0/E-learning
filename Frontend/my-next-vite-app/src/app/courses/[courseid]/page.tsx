@@ -376,6 +376,7 @@ const handleRatingSubmit = async (e: React.FormEvent) => {
       <div className="module-header">
         <h3 className="module-title">{module.title}</h3>
         <p className="module-content">{module.content}</p>
+        
       </div>
     </Link>
     <button onClick={() => handleEditModule(module)}>Edit</button>
