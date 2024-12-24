@@ -80,6 +80,7 @@ export default function FileUpload({ moduleId, onUploadSuccess }:any ){
     >
       {uploading ? 'Uploading...' : 'Upload'}
     </button>
+    
   </form>  
   );
 }

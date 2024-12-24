@@ -166,10 +166,13 @@ export default function ModulePage({ params }: { params: Promise<{ moduleid: str
 </div>
 
       <div className="module-resources-container">
+      <button  className="sort-button">quizess</button>
         <h1 className="section-header">Module Resources</h1>
+        
         <button onClick={toggleSortOrder} className="sort-button">
           Sort by Date ({sortOrder === 'asc' ? 'Ascending' : 'Descending'})
         </button>
+       
         <section className="resources-section">
           <h2>Student Resources</h2>
           <ul className="resources-list">
@@ -233,6 +236,7 @@ export default function ModulePage({ params }: { params: Promise<{ moduleid: str
             ) : (
               <p>No resources with download links available.</p>
             )}
+         
           </ul>
         </section>
 
