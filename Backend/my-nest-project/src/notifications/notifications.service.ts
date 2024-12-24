@@ -59,6 +59,9 @@ export class NotificationsService {
       return notification;
     }
   }
+ async findByUserId(userId: string): Promise<Notification[]> {
+    return this.notificationModel.find({ receiverId: { $in: [userId] } }).exec();
+}
   
 
   async update(id: string, updateNotificationDto: UpdateNotificationDto): Promise<Notification> {

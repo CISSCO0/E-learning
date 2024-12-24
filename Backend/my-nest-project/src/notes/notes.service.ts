@@ -86,4 +86,39 @@ export class NotesService {
     await this.checkOwnership(noteId, userId);
     return this.notesModel.findByIdAndUpdate(noteId, { isFavorite: true }, { new: true }).exec();
   }
+
+  async createByUserId(createNoteDto: any): Promise<Notes> {
+    const newNote = new this.notesModel({
+      ...createNoteDto,
+      created_at: new Date(),
+      last_updated: new Date(),
+    });
+    return newNote.save();
+  }
+  
+  
+async updateByUserId(id: string, updateNoteDto: any): Promise<Notes> {
+  const updatedNote = await this.notesModel
+    .findByIdAndUpdate(id, { ...updateNoteDto, last_updated: new Date() }, { new: true })
+    .exec();
+  if (!updatedNote) throw new NotFoundException('Note not found');
+  return updatedNote;
+}
+  
+async removeByUserId(id: string): Promise<void> {
+  const result = await this.notesModel.findByIdAndDelete(id).exec();
+  if (!result) throw new NotFoundException('Note not found');
+}
+async findById(id: string): Promise<Notes> {
+  const note = await this.notesModel.findById(id).exec();
+  if (!note) throw new NotFoundException('Note not found');
+  return note;
+}
+
+async findByUserId(userId: string): Promise<Notes[]> {
+  return this.notesModel.find({ user_id: userId }).exec();
+}
+async findByCourseAndUser(courseId: string, userId: string): Promise<Notes[]> {
+  return this.notesModel.find({ course_id: courseId, user_id: userId }).exec();
+}
 }

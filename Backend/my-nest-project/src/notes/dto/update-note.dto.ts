@@ -6,12 +6,10 @@ export class UpdateNoteDto {
   user_id?: string;
 
   @IsString()
-  @IsOptional()
-  course_id?: string;
+  course_id: string;  // Make course_id required
 
   @IsString()
-  @IsOptional()
-  content?: string;
+  content: string;  // Make content required
 
   @IsDate()
   @IsOptional()

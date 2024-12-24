@@ -10,7 +10,7 @@ export class CreateNoteDto {
   course_id: string;
 
   @IsString()
-  //@IsNotEmpty()
+  @IsNotEmpty()
   content: string;
 
   @IsDate()

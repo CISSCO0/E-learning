@@ -7,8 +7,8 @@ export class Notification extends Document {
   @Prop({ required: true })
   senderId: string; // ID of the sender
 
-  @Prop({ type:[String], required: true })
-  receiverId: string[]; // ID of the recipient
+ @Prop({ type: [String], required: true })
+receiverId: string[];
 
   @Prop({ required: true })
   content: string; // Content of the notification

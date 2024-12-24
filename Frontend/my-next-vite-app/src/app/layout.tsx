@@ -1,12 +1,14 @@
 "use client";
 
-
 import React, { useState } from "react";
-import './global.css'
-import './all.css'
+import "./global.css";
+import "./all.css";
+import { useRouter } from "next/navigation";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const router = useRouter();
 
   const toggleDropdown = () => {
     setDropdownVisible(!dropdownVisible);
@@ -16,11 +18,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     setSidebarVisible(!sidebarVisible);
   };
 
+  const handleNotificationClick = () => {
+    // Redirect to notifications page with user ID (replace 'userId' dynamically)
+    const userId = "12345"; // Replace with actual user ID from context/auth
+    router.push(`/notifications/${userId}`);
+  };
+
   return (
     <html lang="en">
-      <head>
-
-      </head>
+      <head></head>
       <body>
         <div className="header">
           {/* Menu Icon (For Sidebar) */}
@@ -33,7 +39,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
 
           {/* Bell Icon */}
-          <i className="fa-solid fa-bell bell-icon"></i>
+          <i
+            className="fa-solid fa-bell bell-icon"
+            onClick={handleNotificationClick}
+            style={{ cursor: "pointer" }}
+          ></i>
 
           {/* List Icon (Dropdown) */}
           <i className="fa-solid fa-list menu-icon" onClick={toggleDropdown}></i>
@@ -42,11 +52,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {dropdownVisible && (
             <div className="dropdown">
               <ul>
-                <li><a>Account</a></li>
-                <li><a>Login</a></li>
-                <li><a>SignUp</a></li>
-                <li><a>Logout</a></li>
-                <li><a>Delete Account</a></li>
+                <li>
+                  <a>Account</a>
+                </li>
+                <li>
+                  <a>Login</a>
+                </li>
+                <li>
+                  <a>SignUp</a>
+                </li>
+                <li>
+                  <a>Logout</a>
+                </li>
+                <li>
+                  <a>Delete Account</a>
+                </li>
               </ul>
             </div>
           )}
@@ -54,12 +74,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Sidebar */}
           <div className={`sidebar ${sidebarVisible ? "visible" : ""}`}>
             <ul>
-              <li><a>Home</a></li>
-              <li><a>Courses</a></li>
-              <li><a>Modules</a></li>
-              <li><a>Notification</a></li>
-              <li><a>Logs</a></li>
-              <li><a>Feedback</a></li>
+              <li>
+                <a>Home</a>
+              </li>
+              <li>
+                <a>Courses</a>
+              </li>
+              <li>
+                <a>Modules</a>
+              </li>
+              <li>
+                <a
+                  onClick={() => {
+                    const userId = "12345"; // Replace with actual user ID
+                    router.push(`/notifications/${userId}`);
+                  }}
+                >
+                  Notification
+                </a>
+              </li>
+              <li>
+                <a>Logs</a>
+              </li>
+              <li>
+                <a>Feedback</a>
+              </li>
             </ul>
           </div>
         </div>

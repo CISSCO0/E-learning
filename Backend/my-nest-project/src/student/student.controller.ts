@@ -6,24 +6,24 @@ import {
   Delete,
   Body,
   Param,
-  Query,
+ // Query,
   UseGuards,
-  Req,
-  UsePipes,
-  ValidationPipe,
+ // Req,
+ // UsePipes,
+ // ValidationPipe,
 } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { createStudentDTo } from './dto/createStudent.dto';
 import { updateStudentDTo } from './dto/updateStudent.dto';
-import { AuthGuard } from 'src/auth/guards/authentication.guard';
-import { AuthorizationGuard } from 'src/auth/guards/authorization.gaurd';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { Role } from '../auth/decorators/roles.decorator';
+//import { AuthGuard } from 'src/auth/guards/authentication.guard';
+//import { AuthorizationGuard } from 'src/auth/guards/authorization.gaurd';
+//import { Roles } from '../auth/decorators/roles.decorator';
+//import { Role } from '../auth/decorators/roles.decorator';
 import { Student } from './models/student.Schema';
 
 
 
-@UseGuards(AuthGuard, AuthorizationGuard)
+//@UseGuards(AuthGuard, AuthorizationGuard)
 
 
 @Controller('students')
@@ -39,14 +39,14 @@ export class StudentController {
   }
 
   // ======================================================================
-  @Roles(Role.Admin)
+  //@Roles(Role.Admin)
   @Get()
   async getAllStudents(): Promise<Student[]> {
     return this.studentService.getAllStudents();
   }
 
   // ======================================================================
-  @Roles(Role.Admin, Role.Instructor)
+  //@Roles(Role.Admin, Role.Instructor)
   @Get(':id')
   async getStudentById(@Param('id') id: string): Promise<Student> {
     return this.studentService.getStudentById(id);
@@ -64,7 +64,7 @@ export class StudentController {
   }
 
   // ======================================================================
-  @Roles(Role.Admin, Role.Student)
+  //@Roles(Role.Admin, Role.Student)
   @Delete(':id')
   async deleteStudent(@Param('id') id: string): Promise<{ message: string }> {
     await this.studentService.deleteStudent(id);
