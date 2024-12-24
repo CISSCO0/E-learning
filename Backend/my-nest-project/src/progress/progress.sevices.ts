@@ -131,41 +131,58 @@ export class ProgressService {
         
       }
 
-      private gradeMapping = {
-        A: 4.0,
-        B: 3.0,
-        C: 2.0,
-        D: 1.0,
-        F: 0.0,
+      private letterGradeMapping = {
+        4.0: 'A',
+        3.0: 'B',
+        2.0: 'C',
+        1.0: 'D',
+        0.0: 'F',
       };
-    
-      // Calculate the final grade
-      async calculateFinalGrade(userId: string, courseId: string): Promise<number> {
+      
+      async calculateFinalGrade(userId: string, courseId: string): Promise<string> {
         const progress = await this.progressModel.findOne({ user_id: userId, course_id: courseId });
-    
+        console.log(progress);
         if (!progress) {
-          throw new NotFoundException('Progress not found for the specified user and course');
+            throw new NotFoundException('Progress not found for the specified user and course');
         }
     
         const grades = progress.performance;
+    
         if (grades.length === 0) {
-          throw new Error('No performance grades found for this user.');
+            throw new Error('No performance grades found for this user.');
         }
     
         // Calculate the GPA/average based on the grades
         let totalGradePoints = 0;
         for (let grade of grades) {
-          if (this.gradeMapping[grade] === undefined) {
-            throw new Error(`Invalid grade value: ${grade}`);
-          }
-          totalGradePoints += this.gradeMapping[grade];
+            // Convert grade to number if it's a string
+            const numericGrade = Number(grade); // Converts to number
+    
+            if (isNaN(numericGrade)) {
+                throw new Error(`Invalid grade value: ${grade}`); // Handle invalid numeric values
+            }
+    
+            totalGradePoints += numericGrade;
         }
     
-        const finalGrade = totalGradePoints / grades.length;
+        const finalGPA = totalGradePoints / grades.length;
     
-        // Return the final grade (GPA value)
-        return parseFloat(finalGrade.toFixed(2)); // Limiting to 2 decimal places
-      }
+        // Map the GPA to the corresponding letter grade
+        let letterGrade = '';
+        if (finalGPA >= 90) {
+            letterGrade = 'A';
+        } else if (finalGPA >= 80) {
+            letterGrade = 'B';
+        } else if (finalGPA >= 60) {
+            letterGrade = 'C';
+        } else if (finalGPA >= 40) {
+            letterGrade = 'D';
+        } else {
+            letterGrade = 'F';
+        }
     
-
-}
+        // Return the final letter grade
+        return letterGrade;
+    }
+    
+    }

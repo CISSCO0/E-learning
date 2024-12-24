@@ -1,0 +1,50 @@
+.welcomeSection {
+    position: relative;
+    height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  .backgroundImage {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  
+  .content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    color: white;
+  }
+  
+  .title {
+    font-size: 2.25rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  }
+  
+  .subtitle {
+    font-size: 1.25rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  }
+  
+  @media (min-width: 768px) {
+    .title {
+      font-size: 3rem;
+    }
+    .subtitle {
+      font-size: 1.5rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .title {
+      font-size: 3.75rem;
+    }
+  }
+  
+  

@@ -23,7 +23,7 @@ async function bootstrap(): Promise<void> {
 
   // MongoDB connection URI and port setup
   const mongoUri = process.env.MONGO_URI || 'mongodb+srv://clown:SE123@cluster1.llyk9cg.mongodb.net/E_Learning';
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 5000;
 
   // Use multer for handling multipart/form-data (e.g., file uploads)
   //app.use(multer().any());

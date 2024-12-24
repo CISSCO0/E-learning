@@ -49,7 +49,8 @@ export class StudentController {
   @Roles(Role.Admin, Role.Instructor)
   @Get(':id')
   async getStudentById(@Param('id') id: string): Promise<Student> {
-    return this.studentService.getStudentById(id);
+       console.log(await this.studentService.getStudentById(id));
+    return await  this.studentService.getStudentById(id);
   }
 
   // ======================================================================

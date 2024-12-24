@@ -26,6 +26,7 @@ export class ProgressController {
    // GET All Progress
    @Get()
    async getAllProgress() {
+    console.log('myar')
      return await this.progressService.findAll();
    }
    
@@ -73,7 +74,7 @@ export class ProgressController {
    }
  
    @Get(':userId/:courseId')
-  @Public()
+   @Public()
    async getProgress(
      @Param('userId') userId: string,
      @Param('courseId') courseId: string,
@@ -83,7 +84,7 @@ export class ProgressController {
 
    @Post(':userId/:moduleId/complete')
    @Roles(Role.Instructor)
- @Roles(Role.Admin)
+   @Roles(Role.Admin)
    async completeModule(
      @Param('userId') userId: string,
      @Param('moduleId') moduleId: string,
@@ -96,9 +97,10 @@ export class ProgressController {
      @Param('userId') userId: string,
      @Param('courseId') courseId: string,
    ) {
+
      const finalGrade = await this.progressService.calculateFinalGrade(userId, courseId);
-     return { finalGrade };
-   }
-  
+     return { finalGrade };
+   }
+   
 }
 
