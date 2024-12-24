@@ -11,7 +11,9 @@ import {
   UseGuards,
   UsePipes,
   ValidationPipe,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { InstructorService } from './instructor.service';
 import { createInstructorDTo } from './dto/createInstructor.dto';
 import { updateInstructorDTo } from './dto/updateInstructor.dto';
@@ -41,6 +43,25 @@ export class InstructorController {
   async getAllInstructors(): Promise<Instructor[]> {
     return this.instructorService.getAllInstructors();
   }
+  @Get("report")
+  async getInstructorRatingsReport(@Res() res: Response) {
+    try {
+      // Generate the report and get the file path
+      const reportFilePath = await this.instructorService.generateInstructorReport();
+
+      // Send the report as a downloadable file
+      res.download(reportFilePath, 'instructor_ratings_report.csv', (err) => {
+        if (err) {
+          res.status(500).send('Error downloading the report');
+        }
+
+        // Clean up the file after download
+        this.instructorService.deleteReportFile(reportFilePath);
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
 
   // ======================================================================
   @Roles(Role.Admin, Role.Student)
@@ -69,6 +90,7 @@ export class InstructorController {
   }
 
   // ======================================================================
+
   
 }
 

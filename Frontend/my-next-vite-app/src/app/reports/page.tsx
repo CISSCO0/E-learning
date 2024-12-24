@@ -4,9 +4,10 @@ import { useState } from 'react';
 import axios from 'axios';
 
 const ReportGeneration = () => {
-  const [isLoading, setIsLoading] = useState<{ progress: boolean; analytics: boolean }>({
+  const [isLoading, setIsLoading] = useState<{ progress: boolean; analytics: boolean; instructorRatings: boolean }>({
     progress: false,
     analytics: false,
+    instructorRatings: false,
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +37,7 @@ const ReportGeneration = () => {
       if (response.headers['content-type']?.includes('text/csv')) {
         // Handle CSV content directly
         const csvString = response.data;
-        const csvRows = csvString.split('\n').map((row:any) => row.split(','));
+        const csvRows = csvString.split('\n').map((row: any) => row.split(','));
         setCsvData(csvRows);
 
         // Create a Blob for download
@@ -62,7 +63,11 @@ const ReportGeneration = () => {
       }
     } catch (err: any) {
       console.error(`Error generating ${reportType} report:`, err);
-      setError(`Failed to generate the ${reportType} report. Please try again.`);
+      if (err.response) {
+        setError(`Failed to generate ${reportType} report. ${err.response.data.message || 'Please try again.'}`);
+      } else {
+        setError(`Failed to generate the ${reportType} report. Please try again.`);
+      }
     } finally {
       setIsLoading((prev) => ({ ...prev, [reportType]: false }));
     }
@@ -106,6 +111,23 @@ const ReportGeneration = () => {
           }`}
         >
           {isLoading.analytics ? 'Generating Course Analytics Report...' : 'Generate Course Analytics Report'}
+        </button>
+   
+        {/* Instructor Ratings Report Button */}
+        <button
+          onClick={() =>
+            handleCsvDownload(
+              'http://localhost:5000/instructors/report',  // Correct URL for instructor ratings
+              'instructor_ratings_report.csv',
+              'instructorRatings'
+            )
+          }
+          disabled={isLoading.instructorRatings}
+          className={`px-4 py-2 rounded text-white ${
+            isLoading.instructorRatings ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+          }`}
+        >
+          {isLoading.instructorRatings ? 'Generating Instructor Ratings Report...' : 'Generate Instructor Ratings Report'}
         </button>
       </div>
 

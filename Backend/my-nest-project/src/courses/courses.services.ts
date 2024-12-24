@@ -18,7 +18,7 @@ export class CoursesService {
         @InjectModel(Courses.name) private courseModel: mongoose.Model<Courses>,
         @InjectModel(Modules.name) private readonly moduleModel: Model<Modules>,
         @InjectModel(Student.name) private readonly studentModel : Model<Student>,
-        @InjectModel(Instructor.name) private readonly instructor : Model<Instructor>
+     //   @InjectModel(Instructor.name) private readonly instructor : Model<Instructor>
 
     ) { }
     
