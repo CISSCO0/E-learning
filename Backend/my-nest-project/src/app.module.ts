@@ -36,6 +36,7 @@ import { BackupModule } from './backup/backup.module';
       isGlobal: true, // Makes the configuration available globally
     }),
     // Use MongooseModule with ConfigService to read the MONGO_URI
+    
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({

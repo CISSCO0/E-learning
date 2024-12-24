@@ -36,7 +36,8 @@ export class ThreadService {
   async getAllThreads() {
     return this.threadModel.find().exec();
   }
-  
+
+
   async getThreadById(id: string): Promise<Thread> {
     const thread = await this.threadModel.findById(id).populate('messages').exec();
     if (!thread) throw new NotFoundException(`Thread with ID ${id} not found`);
@@ -46,7 +47,6 @@ export class ThreadService {
   async updateThread(id: string ,data:UpdateThreadDto): Promise<Thread> {
     return this.threadModel.findByIdAndUpdate(id, {data}, { new: true }).exec();
   }
-
   async deleteThread(id: string): Promise<void> {
     const result = await this.threadModel.findByIdAndDelete(id).exec();
     if (!result) throw new NotFoundException(`Thread with ID ${id} not found`);

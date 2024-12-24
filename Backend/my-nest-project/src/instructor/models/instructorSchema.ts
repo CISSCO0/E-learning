@@ -6,9 +6,10 @@ export type InstructorDocument = Instructor & Document;
 
 @Schema()
 export class Instructor {
-
+ 
   @Prop({ type: String, required: true })
   user_id: string;
+
   
   @Prop({ type: [{ type: Types.ObjectId }] })
   students: Types.ObjectId[];

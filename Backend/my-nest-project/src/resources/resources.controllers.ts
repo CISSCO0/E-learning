@@ -64,10 +64,13 @@ export class ResourcesController {
   }
   
 
-  @Post(':resourceId/outdated')//tested
-  @Roles(Role.Admin, Role.Instructor)
-  async updateOutdatedFlag(@Param('resourceId') resourceId: string) {
-    return await this.resourcesService.updateResourceOutdatedFlag(resourceId);
+  @Post(':resourceId/outdated')
+  async updateOutdatedFlag(
+    @Param('resourceId') resourceId: string,
+    @Body() body: { outdated: boolean } // Accepts the 'flag' in the request body
+  ) {
+   // console.log(body.outdated);
+    return await this.resourcesService.updateResourceOutdatedFlag(resourceId, body.outdated);
   }
 
   @Get(':moduleId/non-outdated')//tested 
@@ -83,22 +86,22 @@ export class ResourcesController {
       return this.resourcesService.fetchAllResourcesByModuleId(moduleId);
     }
   
-  @Public()
   @Get(':moduleId/with-download-links')
-  @Public()
+  @Roles(Role.Admin, Role.Instructor)
   async fetchAllResourcesWithDownloadLinks(@Param('moduleId') moduleId: string) {
+    console.log(await this.resourcesService.fetchAllResourcesWithDownloadLinks(moduleId));
     return await this.resourcesService.fetchAllResourcesWithDownloadLinks(moduleId);
   }
   @Public()
   @Get('download/:fileName')
-  @Public()
+  //@Public()
   async downloadResource(@Param('fileName') fileName: string, @Res() res: any) {
     return this.resourcesService.downloadResource(fileName, res);
   }
 //done
 
   @Delete(':moduleId/:resourceId')
-  @Roles(Role.Admin, Role.Instructor)
+ @Roles(Role.Admin, Role.Instructor)
   async deleteResource(
     @Param('moduleId') moduleId: string,
     @Param('resourceId') resourceId: string,

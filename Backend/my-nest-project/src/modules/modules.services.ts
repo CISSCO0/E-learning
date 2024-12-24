@@ -57,6 +57,14 @@ export class ModulesService {
       options: { sort: { createdAt: -1 } }, // Sort resources by date in descending order
     });
   }
+  async getModulesByCourseId(courseId: string): Promise<Modules[]> {
+    const modules = await this.moduleModel.find({ course_id: courseId, isDeleted: { $ne: true } }).exec();
+    if (!modules || modules.length === 0) {
+      throw new NotFoundException(`No modules found for course ID: ${courseId}`);
+    }
+    return modules;
+  }
+
 
 
 }

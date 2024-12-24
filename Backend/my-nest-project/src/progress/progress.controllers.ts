@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param , NotFoundException,Delete ,Patch,UseGuards, BadRequestException} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param , NotFoundException,Delete ,Patch,UseGuards, BadRequestException, Res} from '@nestjs/common';
 import { ProgressService } from './progress.sevices';
 import { UpdateProgressDto } from './dto/update.dto';
 import {CreateProgressDto } from './dto/create.dto';
@@ -6,7 +6,7 @@ import { Role, Roles } from '../auth/decorators/roles.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { AuthorizationGuard } from '../auth/guards/authorization.gaurd';
 import { AuthGuard } from '../auth/guards/authentication.guard';
-
+import { Response } from 'express';
 @Controller('progress')
 @UseGuards(AuthorizationGuard)
  @UseGuards(AuthGuard)
@@ -25,12 +25,32 @@ export class ProgressController {
 
    // GET All Progress
    @Get()
+   @Roles(Role.Instructor)
    async getAllProgress() {
      return await this.progressService.findAll();
    }
    
 
- 
+   @Get('quiz-results/')
+   async getAllProgressReport(@Res() res: Response) {
+    try {
+      // Call the service to generate the report
+      const reportFilePath = await this.progressService.generateAllProgressReport();
+  console.log(reportFilePath)
+      // Send the report as a downloadable file
+      res.download(reportFilePath, `progress_report.csv`, (err) => {
+        if (err) {
+          res.status(500).send('Error downloading the report');
+        }
+  
+        // Clean up the file after download
+        this.progressService.deleteReportFile(reportFilePath);
+      });
+    } catch (error) {
+      // Handle errors (e.g., no data found)
+      res.status(404).json({ message: error.message });
+    }
+  }
    // GET by ID
    @Get(':id')
    @Public()
@@ -99,6 +119,9 @@ export class ProgressController {
      const finalGrade = await this.progressService.calculateFinalGrade(userId, courseId);
      return { finalGrade };
    }
+
+
+  
   
 }
 

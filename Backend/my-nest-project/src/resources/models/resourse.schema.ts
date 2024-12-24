@@ -11,6 +11,7 @@ export class resource extends Document {
   fileName: string;
   @Prop({ type: String, required: true })
   filePath: string;
+  
   @Prop({ type: Boolean, default: false })
   outdated: boolean; // true = hidden from students, false = active
 

@@ -9,6 +9,7 @@
 
 // export default async function login(formData: FormData) {
 //     const res = await axios.post('http://localhost:5000/auth/login', {
+
 //         email:formData.get('email'),
 //         hash_pass: formData.get('password')
 //         },{ withCredentials: true });

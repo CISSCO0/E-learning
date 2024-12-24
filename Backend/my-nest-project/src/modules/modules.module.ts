@@ -7,6 +7,7 @@ import { resource, ResourceSchema } from '../resources/models/resourse.schema';
 import { AuthorizationGuard } from '../auth/guards/authorization.gaurd';
 import { AuthGuard } from '../auth/guards/authentication.guard';
 import { AuthModule } from '../auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -14,10 +15,18 @@ import { AuthModule } from '../auth/auth.module';
       { name: Modules.name, schema: ModulesSchema },
       { name: resource.name, schema: ResourceSchema },
     ]),
-    AuthModule, // Import AuthModule to provide JwtService
+  AuthModule, //Import AuthModule to provide JwtService
   ],
   controllers: [ModulesController],
-  providers: [ModulesService, AuthGuard, AuthorizationGuard],
+  providers: [ModulesService, 
+      {
+        provide: APP_GUARD, 
+        useClass: AuthGuard,
+      },
+      {
+        provide: APP_GUARD,
+        useClass: AuthorizationGuard, 
+      },],
   exports: [ModulesService,MongooseModule],
 })
 export class ModulesModule {}

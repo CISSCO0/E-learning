@@ -51,16 +51,21 @@ export class ResourcesService {
     return savedResource;
   }
   
-
-  async updateResourceOutdatedFlag(resourceId: string): Promise<resource> {
-    const resourceItem = await this.resourceModel.findById(resourceId);
-    if (!resourceItem) throw new NotFoundException('Resource not found');
-
-    resourceItem.outdated = true;
-    return resourceItem.save();
+  async updateResourceOutdatedFlag(resourceId: string, flag: boolean) {
+    const updatedResource = await this.resourceModel.findByIdAndUpdate(
+      resourceId,
+      { outdated: flag }, // Update the 'outdated' field with the provided flag
+      { new: true }, // Returns the updated resource
+    );
+    updatedResource.save
+    if (!updatedResource) {
+      throw new Error('Resource not found');
+    }
+console.log(updatedResource);
+    return updatedResource;
   }
 
-  async fetchNonOutdatedResources(moduleId: string): Promise<resource[]> {
+  async fetchNonOutdatedResources(moduleId: string): Promise<any[]> {
     const module = await this.moduleModel
       .findById(moduleId)
       .populate({
@@ -72,7 +77,10 @@ export class ResourcesService {
 
     if (!module) throw new NotFoundException('Module not found');
 
-    return module.resources;
+    return module.resources.map((res) => ({
+      ...res,
+      downloadLink: `/resources/download/${res.fileName}`,
+    }));
   }
 
   async fetchAllResourcesWithDownloadLinks(moduleId: string): Promise<any[]> {

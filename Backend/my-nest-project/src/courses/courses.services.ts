@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException ,BadRequestException} from '@nestjs/common';
+import { Injectable, NotFoundException ,BadRequestException, InternalServerErrorException} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { Courses } from './models/courses.schema';
@@ -7,13 +7,23 @@ import { Modules } from '../modules/models/modules.schema';
 import { Model } from 'mongoose';
 import { CreateCourseDto } from './dto/create.course.dto';
 import { UpdateCourseDto } from './dto/update.course.dto';
+import { error } from 'console';
+import * as fs from 'fs'; // File system module to write files
+import * as path from 'path'; // Path module to work with file paths
+import { Instructor, InstructorSchema } from 'src/instructor/models/instructorSchema';
 @Injectable()
 export class CoursesService {
+
     constructor(
         @InjectModel(Courses.name) private courseModel: mongoose.Model<Courses>,
         @InjectModel(Modules.name) private readonly moduleModel: Model<Modules>,
-        @InjectModel(Student.name) private readonly studentModel : Model<Student>
+        @InjectModel(Student.name) private readonly studentModel : Model<Student>,
+        @InjectModel(Instructor.name) private readonly instructorModel : Model<Instructor>
+
     ) { }
+    
+    private ratedUsersSet = new Set();
+
     private calculateAverageRating(ratings: number[]): number {
         const sum = ratings.reduce((acc, rating) => acc + rating, 0);
         return sum / ratings.length;
@@ -83,25 +93,32 @@ export class CoursesService {
       }
 
 
- async updateRating(courseId: string, newRating: number): Promise<Courses> {
-            const course = await this.courseModel.findById(courseId);
-            if (!course) {
-              throw new NotFoundException(`Course with ID ${courseId} not found`);
-            }
-        
-            // Add the new rating to the ratings array
-            course.ratings.push(newRating);
-        
-            // Recalculate the average rating
-            const averageRating = this.calculateAverageRating(course.ratings);
-            
-            // Update the course with the new average rating
-            course.rating = averageRating;
-            await course.save();
-        
- return course;
-}
-
+      async addRating(courseId, newRating, userId) {
+          // Check if the user has already rated
+          if (this.ratedUsersSet.has(userId)) {
+            throw new Error("you hadve rated before");
+          } else {
+              // Fetch the course by ID
+              const course = await this.courseModel.findById(courseId);// Fetch course logic
+              if (!course) {
+                  throw new Error(`Course with ID ${courseId} not found`);
+              }
+      
+              this.ratedUsersSet.add(userId);
+              // Add the new rating to the ratings array
+              course.ratings.push(newRating);
+      
+              // Recalculate the average rating
+              course.rating = this.calculateAverageRating(course.ratings);
+      
+              // Save the updated course
+              course.save() ;
+      
+      
+              return course; // Return the updated course
+          }
+      }
+      
 async searchByKeywords(keywords: string[]): Promise<Courses[]> {
   const lowerCaseKeywords = keywords.map(keyword => keyword.toLowerCase());
   const courses = await this.courseModel.find({
@@ -126,6 +143,79 @@ async searchByKeywordsForStudents(keywords: string[]): Promise<Courses[]> {
           
             return courses;
 }
-          
+  async getStudentsByCourse(courseId: string): Promise<Student[]> {
+    return this.studentModel.find({ enrolled_courses: courseId }).exec();
+  }       
+  async generateAllCoursesReport(): Promise<string> {
+    try {
+      // Fetch all courses
+      const allCourses = await this.courseModel.find().exec();
+      if (!allCourses || allCourses.length === 0) {
+        throw new NotFoundException('No courses found');
+      }
 
-}
+      // Prepare headers for the report
+      const headers = [
+        'Course Title',
+        'Instructor Name',
+        'Instructor Rating',
+        'Module Title',
+        'Module Rating',
+        'Course Rating',
+      ];
+
+      // Initialize rows
+      const rows: string[] = [];
+
+      for (const course of allCourses) {
+        // Fetch modules for the current course
+        const modules = await this.moduleModel.find({ course_id: course._id }).exec();
+
+        // Fetch the instructor for the course
+        const instructor = await this.instructorModel.findById(course.instructor).exec();
+        const instructorId = instructor?.user_id || 'Unknown';
+        const instructorRating = instructor?.rating || 'N/A';
+
+        if (!modules.length) {
+          // Handle case where course has no modules
+          rows.push(`${course.title},${instructorId},${instructorRating},No Modules,N/A,N/A`);
+          continue;
+        }
+
+        // Calculate the course rating (average of module ratings)
+        const moduleRatings = modules.map((module) => module.rating);
+        const courseRating = this.calculateAverageRating(moduleRatings);
+
+        // Add rows for each module in the course
+        for (const module of modules) {
+          rows.push(
+            `${course.title},${instructorId},${instructorRating},${module.title},${module.rating},${courseRating}`,
+          );
+        }
+      }
+
+      // Combine headers and rows
+      const reportData = [headers.join(','), ...rows].join('\n');
+
+      // Save the report to a file
+      const reportFilePath = path.join(__dirname, `all_courses_analytics_report.csv`);
+      fs.writeFileSync(reportFilePath, reportData);
+
+      return reportFilePath; // Return the file path for download
+    } catch (error) {
+      console.error('Error generating report:', error);
+      throw new InternalServerErrorException('Error generating courses report');
+    }
+  }
+
+  async deleteReportFile(filePath: string): Promise<void> {
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (error) {
+      console.error('Error deleting report file:', error);
+      throw new InternalServerErrorException('Error deleting the report file');
+    }
+  }
+}  
