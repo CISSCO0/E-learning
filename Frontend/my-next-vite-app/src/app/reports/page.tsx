@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import axios from 'axios';
-import Papa from 'papaparse';
 
 const ReportGeneration = () => {
   const [isLoading, setIsLoading] = useState<{ progress: boolean; analytics: boolean }>({
@@ -20,39 +19,35 @@ const ReportGeneration = () => {
     const rows = data.map((row) => headers.map((header) => row[header] ?? ""));
     return [headers, ...rows];
   };
-  
 
   // Handle CSV Download and Display
-  const handleCsvDownload = async (url: string, fileName: string, reportType:string) => {
+  const handleCsvDownload = async (url: string, fileName: string, reportType: string) => {
     setIsLoading((prev) => ({ ...prev, [reportType]: true }));
     setError(null);
-  
+
     try {
       const response = await axios.get(url, {
         withCredentials: true, // Ensure cookies are sent if needed
-       headers: { Accept: 'text/csv' }, // Expect CSV format
-      responseType: 'text', // Handle text data for CSV
+        headers: { Accept: 'application/json' }, // Expect JSON format from the backend
+        responseType: 'json', // Handle JSON response
       });
 
-      
-      // Determine the response content type
-      const contentType = response.headers['content-type'];
-      if (contentType && contentType.includes('text/csv')) {
-        // Parse and display the CSV content
-        const parsed = Papa.parse(response.data, { header: false });
-        setCsvData(parsed.data);
-        
+      // Determine if the response is in CSV format or JSON
+      if (response.headers['content-type']?.includes('text/csv')) {
+        // Handle CSV content directly
+        const csvString = response.data;
+        const csvRows = csvString.split('\n').map((row:any) => row.split(','));
+        setCsvData(csvRows);
+
         // Create a Blob for download
-        const fileURL = window.URL.createObjectURL(new Blob([response.data]));
+        const fileURL = window.URL.createObjectURL(new Blob([csvString]));
         const link = document.createElement('a');
         link.href = fileURL;
         link.setAttribute('download', fileName);
         link.click();
       } else {
-
         // Handle JSON response
         const reportData = response.data; // Assuming the response is JSON
-       
 
         const csvFormattedData = convertToCSVFormat(reportData); // Convert JSON to CSV-like rows
         setCsvData(csvFormattedData);
@@ -100,7 +95,7 @@ const ReportGeneration = () => {
         <button
           onClick={() =>
             handleCsvDownload(
-              'http://localhost:5000/courses/analytics',
+              'http://localhost:5000/courses/report/',
               'course_analytics_report.csv',
               'analytics'
             )

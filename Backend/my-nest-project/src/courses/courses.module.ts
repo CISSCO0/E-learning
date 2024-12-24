@@ -16,7 +16,7 @@ import { InstructorModule } from 'src/instructor/instructor.module';
     MongooseModule.forFeature([{ name: Courses.name, schema: CoursesSchema }]),
     forwardRef(() => ModulesModule),
    forwardRef(() => StudentModule),
-   forwardRef(()=> InstructorModule)
+  // forwardRef(()=> InstructorModule)
   ],
   controllers: [CoursesController],
   providers: [

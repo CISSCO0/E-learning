@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException ,BadRequestException, InternalServerErrorException} from '@nestjs/common';
+import { Injectable, NotFoundException ,BadRequestException} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { Courses } from './models/courses.schema';
@@ -18,7 +18,7 @@ export class CoursesService {
         @InjectModel(Courses.name) private courseModel: mongoose.Model<Courses>,
         @InjectModel(Modules.name) private readonly moduleModel: Model<Modules>,
         @InjectModel(Student.name) private readonly studentModel : Model<Student>,
-        @InjectModel(Instructor.name) private readonly instructorModel : Model<Instructor>
+        @InjectModel(Instructor.name) private readonly instructor : Model<Instructor>
 
     ) { }
     
@@ -146,76 +146,53 @@ async searchByKeywordsForStudents(keywords: string[]): Promise<Courses[]> {
   async getStudentsByCourse(courseId: string): Promise<Student[]> {
     return this.studentModel.find({ enrolled_courses: courseId }).exec();
   }       
+
   async generateAllCoursesReport(): Promise<string> {
-    try {
-      // Fetch all courses
-      const allCourses = await this.courseModel.find().exec();
-      if (!allCourses || allCourses.length === 0) {
-        throw new NotFoundException('No courses found');
-      }
-
-      // Prepare headers for the report
-      const headers = [
-        'Course Title',
-        'Instructor Name',
-        'Instructor Rating',
-        'Module Title',
-        'Module Rating',
-        'Course Rating',
-      ];
-
-      // Initialize rows
-      const rows: string[] = [];
-
-      for (const course of allCourses) {
-        // Fetch modules for the current course
-        const modules = await this.moduleModel.find({ course_id: course._id }).exec();
-
-        // Fetch the instructor for the course
-        const instructor = await this.instructorModel.findById(course.instructor).exec();
-        const instructorId = instructor?.user_id || 'Unknown';
-        const instructorRating = instructor?.rating || 'N/A';
-
-        if (!modules.length) {
-          // Handle case where course has no modules
-          rows.push(`${course.title},${instructorId},${instructorRating},No Modules,N/A,N/A`);
-          continue;
-        }
-
-        // Calculate the course rating (average of module ratings)
-        const moduleRatings = modules.map((module) => module.rating);
-        const courseRating = this.calculateAverageRating(moduleRatings);
-
-        // Add rows for each module in the course
-        for (const module of modules) {
-          rows.push(
-            `${course.title},${instructorId},${instructorRating},${module.title},${module.rating},${courseRating}`,
-          );
-        }
-      }
-
-      // Combine headers and rows
-      const reportData = [headers.join(','), ...rows].join('\n');
-
-      // Save the report to a file
-      const reportFilePath = path.join(__dirname, `all_courses_analytics_report.csv`);
-      fs.writeFileSync(reportFilePath, reportData);
-
-      return reportFilePath; // Return the file path for download
-    } catch (error) {
-      console.error('Error generating report:', error);
-      throw new InternalServerErrorException('Error generating courses report');
+    // Fetch all courses
+    const allCourses = await this.courseModel.find().exec();
+    if (!allCourses || allCourses.length === 0) {
+      throw new Error('No courses found');
     }
+  
+    // Prepare headers for the report
+    const headers = ['Course Title', 'Module Title', 'Module Rating', 'Course Rating'];
+  
+    // Initialize rows
+    const rows: string[] = [];
+  
+    for (const course of allCourses) {
+      // Fetch modules for the current course
+      const modules = await this.moduleModel.find({ course_id: course._id }).exec();
+      
+      if (!modules.length) {
+        // Handle case where course has no modules
+        rows.push(`${course.title}, No Modules, N/A, N/A`);
+        continue;
+      }
+  
+      // Calculate the course rating (average of module ratings)
+      const moduleRatings = modules.map(module => module.rating);
+      const courseRating = this.calculateAverageRating(moduleRatings);
+  
+      // Add rows for each module in the course
+      for (const module of modules) {
+        rows.push(`${course.title}, ${module.title}, ${module.rating}, ${courseRating}`);
+      }
+    }
+  
+    // Combine headers and rows
+    const reportData = [headers.join(','), ...rows].join('\n');
+  
+    // Save the report to a file
+    const reportFilePath = path.join(__dirname, `all_courses_analytics_report.csv`);
+    fs.writeFileSync(reportFilePath, reportData);
+  
+    return reportFilePath; // Return the file path for download
   }
+  
 
-  async deleteReportFile(filePath: string): Promise<void> {
-    try {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    } catch (error) {
-      console.error('Error deleting report file:', error);
-      throw new InternalServerErrorException('Error deleting the report file');
-    }
+  // Function to clean up the report file after download
+  async deleteReportFile(filePath: string) {
+    fs.unlinkSync(filePath);
   }
 }  

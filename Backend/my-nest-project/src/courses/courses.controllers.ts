@@ -75,6 +75,30 @@ export class CoursesController {
     return this.courseService.findAll();
   }
 
+  
+  @Get('/report/')
+async getAllCoursesAnalytics(@Res() res: Response) {
+  try {
+    console.log("menna2")
+    // Generate the report for all courses and get the file path
+    const reportFilePath = await this.courseService.generateAllCoursesReport();
+ console.log(reportFilePath);
+    // Send the report as a downloadable file
+    res.download(reportFilePath, 'all_courses_analytics_report.csv', (err) => {
+      if (err) {
+        res.status(500).send('Error downloading the report');
+      }
+
+      // Clean up the file after download
+
+      this.courseService.deleteReportFile(reportFilePath);
+    });
+  } catch (error) {
+    // Handle errors (e.g., no courses or modules found)
+    res.status(404).json({ message: error.message });
+  }
+}
+
 
   // Fetch a Specific Course by ID (for admins/instructors)
   @Get('public/:courseId')
@@ -110,28 +134,6 @@ export class CoursesController {
     return this.courseService.searchByKeywords(keywords);
   }
  
-  @Get('analytics')
-async getAllCoursesAnalytics(@Res() res: Response) {
-  try {
-    console.log("menna2")
-    // Generate the report for all courses and get the file path
-    const reportFilePath = await this.courseService.generateAllCoursesReport();
- console.log(reportFilePath);
-    // Send the report as a downloadable file
-    res.download(reportFilePath, 'all_courses_analytics_report.csv', (err) => {
-      if (err) {
-        res.status(500).send('Error downloading the report');
-      }
-
-      // Clean up the file after download
-
-      this.courseService.deleteReportFile(reportFilePath);
-    });
-  } catch (error) {
-    // Handle errors (e.g., no courses or modules found)
-    res.status(404).json({ message: error.message });
-  }
-}
 
    // Fetch All Courses (public)
    @Get()
